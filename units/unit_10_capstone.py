@@ -27,6 +27,8 @@ Unit 10: 实战项目 —— 多通道信号采集与实时分析器
 import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtWidgets, QtCore
+from pyqtgraph.dockarea.DockArea import DockArea
+from pyqtgraph.dockarea.Dock import Dock
 
 
 class SignalGenerator:
@@ -113,11 +115,11 @@ class CapstoneApp:
             "pyqtgraph 实战: 多通道信号采集与实时分析器")
         self.main_win.resize(1400, 900)
 
-        area = pg.dockarea.DockArea()
+        area = DockArea()
         self.main_win.setCentralWidget(area)
 
         # ---- Dock 1: 波形显示 (4通道) ----
-        self.wave_dock = pg.dockarea.Dock(
+        self.wave_dock = Dock(
             "实时波形 (4通道)", size=(900, 500))
 
         self.wave_widget = pg.GraphicsLayoutWidget()
@@ -163,7 +165,7 @@ class CapstoneApp:
         self.wave_dock.addWidget(self.wave_widget)
 
         # ---- Dock 2: FFT 频谱分析 ----
-        self.fft_dock = pg.dockarea.Dock("频谱分析", size=(350, 500))
+        self.fft_dock = Dock("频谱分析", size=(350, 500))
 
         self.fft_widget = pg.GraphicsLayoutWidget()
 
@@ -192,7 +194,7 @@ class CapstoneApp:
         self.fft_dock.addWidget(self.fft_widget)
 
         # ---- Dock 3: 统计面板 ----
-        self.stat_dock = pg.dockarea.Dock("统计信息", size=(350, 300))
+        self.stat_dock = Dock("统计信息", size=(350, 300))
 
         self.stat_table = QtWidgets.QTableWidget()
         self.stat_table.setColumnCount(5)
@@ -205,7 +207,7 @@ class CapstoneApp:
         self.stat_dock.addWidget(self.stat_table)
 
         # ---- Dock 4: 参数控制 ----
-        self.ctrl_dock = pg.dockarea.Dock("参数控制", size=(350, 400))
+        self.ctrl_dock = Dock("参数控制", size=(350, 400))
 
         ctrl_widget = QtWidgets.QWidget()
         ctrl_layout = QtWidgets.QVBoxLayout()

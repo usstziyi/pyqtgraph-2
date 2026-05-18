@@ -11,6 +11,8 @@ Unit 9: 自定义控件与 Dock 系统
 import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtWidgets, QtCore
+from pyqtgraph.dockarea.DockArea import DockArea
+from pyqtgraph.dockarea.Dock import Dock
 
 app = pg.mkQApp("Unit 9: 自定义控件与 Dock 系统")
 
@@ -125,13 +127,13 @@ class ParamDemo:
 #    - 支持拖拽分离/重组
 # ---------------------------------------------------------------------------
 def demo_dock_system():
-    area = pg.dockarea.DockArea()
+    area = DockArea()
 
     # 创建 Dock
-    d1 = pg.dockarea.Dock("信号监视器", size=(400, 300))
-    d2 = pg.dockarea.Dock("频谱分析", size=(400, 300))
-    d3 = pg.dockarea.Dock("统计信息", size=(400, 200))
-    d4 = pg.dockarea.Dock("参数控制", size=(300, 400))
+    d1 = Dock("信号监视器", size=(400, 300))
+    d2 = Dock("频谱分析", size=(400, 300))
+    d3 = Dock("统计信息", size=(400, 200))
+    d4 = Dock("参数控制", size=(300, 400))
 
     area.addDock(d1, 'left')
     area.addDock(d2, 'right')
@@ -189,23 +191,23 @@ def demo_custom_app():
     app_win.resize(1200, 800)
 
     # 使用 Dock 布局
-    area = pg.dockarea.DockArea()
+    area = DockArea()
     app_win.setCentralWidget(area)
 
     # 主绘图区
-    plot_dock = pg.dockarea.Dock("主视图", size=(700, 500))
+    plot_dock = Dock("主视图", size=(700, 500))
     pw_main = pg.PlotWidget(title="数据视图")
     plot_dock.addWidget(pw_main)
 
     # 历史记录
-    history_dock = pg.dockarea.Dock("历史记录", size=(400, 400))
+    history_dock = Dock("历史记录", size=(400, 400))
 
     from pyqtgraph.widgets.DataTreeWidget import DataTreeWidget
     tree = DataTreeWidget()
     history_dock.addWidget(tree)
 
     # 控制面板
-    ctrl_dock = pg.dockarea.Dock("控制面板", size=(300, 300))
+    ctrl_dock = Dock("控制面板", size=(300, 300))
 
     ctrl_widget = QtWidgets.QWidget()
     ctrl_layout = QtWidgets.QVBoxLayout()

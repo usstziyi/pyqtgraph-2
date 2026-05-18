@@ -57,10 +57,8 @@ p_img.addColorBar(img, colorMap='viridis')
 #    - 内置直方图/色阶调整
 #    - 支持缩放和 ROI 选择
 #    - 支持时间序列图像 (3D 数据)
+#    - ImageView 是独立 QWidget，直接 show() 即可
 # ---------------------------------------------------------------------------
-win2 = pg.GraphicsLayoutWidget(title="3. ImageView 交互式查看器", show=True)
-win2.resize(800, 600)
-
 from pyqtgraph import ImageView
 
 # 创建 3D 数据 (帧, 行, 列)
@@ -74,7 +72,8 @@ for i in range(20):
 
 iv = ImageView()
 iv.setImage(frames)
-iv.setWindowTitle("ImageView: 使用下方滑块切换帧")
+iv.setWindowTitle("3. ImageView 交互式查看器 (下方滑块切换帧)")
+iv.show()
 
 
 # ---------------------------------------------------------------------------
@@ -110,15 +109,17 @@ p_hist.vb.addItem(hist, ignoreBounds=True)
 # ---------------------------------------------------------------------------
 # 6. PColorMeshItem: 伪彩色网格
 #    - 用于非均匀网格数据
+#    - x、y 是顶点坐标，每个维度比 z 多 1 (z 有 NxM 单元格，顶点需 (N+1)x(M+1))
 # ---------------------------------------------------------------------------
 p_mesh = win.addPlot(title="6. PColorMeshItem 伪彩色网格", row=1, col=1)
 
-x = np.linspace(-5, 5, 50)
-y = np.linspace(-3, 3, 30)
-X, Y = np.meshgrid(x, y)
-Z = np.sin(X) * np.cos(Y)
+# x_edges, y_edges: 顶点坐标，比 z 的每个维度多 1
+x_edges = np.linspace(-5, 5, 51)  # 51 顶点 → 50 单元格
+y_edges = np.linspace(-3, 3, 31)  # 31 顶点 → 30 单元格
+Xv, Yv = np.meshgrid(x_edges, y_edges)  # shape (31, 51): 顶点坐标
+Z = np.sin(Xv[:-1, :-1]) * np.cos(Yv[:-1, :-1])  # shape (30, 50): 单元格颜色
 
-mesh = pg.PColorMeshItem(x, y, Z, colorMap='plasma')
+mesh = pg.PColorMeshItem(Xv, Yv, Z, colorMap=pg.colormap.get('plasma'))
 p_mesh.addItem(mesh)
 
 p_mesh.addColorBar(mesh, colorMap='plasma')

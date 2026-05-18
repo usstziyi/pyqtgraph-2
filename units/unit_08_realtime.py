@@ -95,10 +95,8 @@ total_size = 5000
 x3 = np.arange(total_size)
 y3 = np.zeros(total_size)
 
-# 开启下采样和视图裁剪
-curve3 = p3.plot(x3, y3, pen='y',
-                 autoDownsample=True,
-                 clipToView=True)
+# 使用 setDownsampling 设置自动降采样 (避免直接传 autoDownsample/clipToView 在某些版本的兼容问题)
+curve3 = p3.plot(x3, y3, pen='y')
 p3.setDownsampling(auto=True, mode='peak')
 
 idx = 0

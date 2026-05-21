@@ -66,26 +66,26 @@ pw_multi.plot(x, np.cos(x), pen='m', name='cos(x)')
 pw_multi.plot(x, np.sin(x) * np.exp(-x / 3), pen='y', name='damped')
 
 
-# ---------------------------------------------------------------------------
-# 4. 不依赖 pg.plot()：手动创建 PlotWidget
-#    - 适合在自定义 GUI 中嵌入
-#    - PlotWidget 本质是 QGraphicsView + PlotItem 的组合
-# ---------------------------------------------------------------------------
-# 创建一个独立窗口，设置窗口标题和大小
-win = pg.GraphicsLayoutWidget(title="4. 手动创建控件")
-win.resize(800, 500)
+# # ---------------------------------------------------------------------------
+# # 4. 不依赖 pg.plot()：手动创建 PlotWidget
+# #    - 适合在自定义 GUI 中嵌入
+# #    - PlotWidget 本质是 QGraphicsView + PlotItem 的组合
+# # ---------------------------------------------------------------------------
+# # 创建一个独立窗口，设置窗口标题和大小
+# win = pg.GraphicsLayoutWidget(title="4. 手动创建控件")
+# win.resize(800, 500)
 
-# addPlot() 在 GraphicsLayoutWidget 中添加 PlotItem
-# row, col 指定网格位置
-plot = win.addPlot(title="手动创建的 PlotItem")
-x = np.linspace(0, 4 * np.pi, 300)
-plot.plot(x, np.sin(x), pen='g', name='sin')
+# # addPlot() 在 GraphicsLayoutWidget 中添加 PlotItem
+# # row, col 指定网格位置
+# plot = win.addPlot(title="手动创建的 PlotItem")
+# x = np.linspace(0, 4 * np.pi, 300)
+# plot.plot(x, np.sin(x), pen='g', name='sin')
 
-# 设置坐标轴标签
-plot.setLabel('left', '幅值')
-plot.setLabel('bottom', '时间', units='s')
+# # 设置坐标轴标签
+# plot.setLabel('left', '幅值')
+# plot.setLabel('bottom', '时间', units='s')
 
-win.show()
+# win.show()
 
 
 # ---------------------------------------------------------------------------

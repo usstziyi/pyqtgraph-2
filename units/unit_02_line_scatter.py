@@ -13,6 +13,13 @@ Unit 2: 线条与散点图
 核心概念:
   PlotDataItem = PlotCurveItem (连线) + ScatterPlotItem (散点)
   可以只显示连线 (默认)、只显示散点、或同时显示两者
+
+简单总结:
+     属性	         作用对象	                 典型用途
+  1. pen	        线条	PlotCurveItem	      连线的颜色、粗细、线型
+  2. symbolPen	  散点轮廓	                 散点符号的边框颜色（默认与 pen 相同）
+  3. symbolBrush	散点填充                   散点符号内部的颜色
+  4. fillBrush	  曲线下方区域              	曲线到 fillLevel 之间的填充色
 """
 
 import numpy as np
@@ -52,6 +59,7 @@ p3.plot(x, np.sin(x), pen='c', symbol='d', symbolSize=6, symbolBrush='w')
 #      'h' 六边形, 'star' 星形, 'arrow_' 系列箭头
 # ---------------------------------------------------------------------------
 p4 = win.addPlot(title="1d. 不同符号类型", row=1, col=1)
+p4.addLegend()
 symbols = ['o', 's', 't', 'd', '+', 'x', 'star']
 x = np.arange(len(symbols)) + 1
 for i, sym in enumerate(symbols):
@@ -74,13 +82,13 @@ p5.plot(x, y, pen=None, symbol='o', symbolSize=sizes, symbolBrush=brushes)
 
 # ---------------------------------------------------------------------------
 # 3. fillLevel: 曲线与指定水平线之间填充
-#    - fillLevel=0: 填充曲线下方到 y=0 的区域
+#    - fillLevel=0 表示从曲线向 y=0 这条水平线之间填充颜色
 #    - fillBrush 指定填充画笔
 # ---------------------------------------------------------------------------
 p6 = win.addPlot(title="3. fillLevel 填充", row=2, col=1)
 x = np.linspace(0, 4 * np.pi, 200)
 y = np.sin(x)
-p6.plot(x, y, pen='w')
+# p6.plot(x, y, pen='w')
 curve = p6.plot(x, y, pen='g', fillLevel=0,
                 fillBrush=(0, 255, 0, 80))
 
@@ -98,7 +106,7 @@ y_with_nan[40:60] = np.nan  # 插入 NaN 制造断点
 p7.plot(x, y_with_nan, pen='y')
 
 p8 = win.addPlot(title="4b. connect='all' (忽略NaN)", row=3, col=1)
-p8.plot(x, y_with_nan, pen='r')
+# p8.plot(x, y_with_nan, pen='r')
 curve_all = p8.plot(x, y_with_nan, pen='r', connect='all')
 
 # ---------------------------------------------------------------------------
@@ -124,5 +132,10 @@ x_rand = np.random.normal(size=n)
 y_rand = np.random.normal(size=n)
 p10.scatterPlot(x_rand, y_rand, size=5,
                 brush=pg.mkBrush(100, 100, 255, 120))
+
+# # 散点有白色边框，蓝色填充
+# p10.scatterPlot(x, y, size=10,
+#                 pen=pg.mkPen('w', width=2),   # ← 散点的白色边框
+#                 brush=pg.mkBrush(100, 100, 255))  # ← 散点内部填充
 
 pg.exec()

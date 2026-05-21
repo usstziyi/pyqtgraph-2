@@ -27,7 +27,7 @@ class SineWaveWorker(QObject):
         self._stop_requested = Event()
 
     @Slot()
-    def start(self):
+    def run(self):
         self._stop_requested.clear()
         interval_seconds = self.time_interval / 1000
 
@@ -49,7 +49,7 @@ class SineWaveWorker(QObject):
                 # 当 sleep_seconds 时间耗尽后， wait() 自然返回， 返回值为 False （表示未被 set）。
                 # 当 self._stop_requested.set() 被调用时， wait() 立即 返回， 返回值为 True 。
         finally:
-            # 通知代理人线程
+            # 销毁worker,关闭子线程
             self.finished.emit()
 
     @Slot()
@@ -125,21 +125,23 @@ class SineWaveDemo(QMainWindow):
         )
         self.worker.moveToThread(self.worker_thread)
 
-        self.worker_thread.started.connect(self.worker.start)
-
+        self.worker_thread.started.connect(self.worker.run)
         self.worker.chunk_ready.connect(self.update_data)
         self.worker.finished.connect(self.worker_thread.quit)
         self.worker.finished.connect(self.worker.deleteLater)
-        
+        self.worker_thread.finished.connect(self.deleteLater)
+
         self.worker_thread.start()
+
+
         """
         退出方式 谁来处理？ 
-        点击窗口关闭按钮 closeEvent → stop_worker() （第 136 行） 
-        Cmd+Q / 菜单退出 / 外部终止 aboutToQuit 信号 → stop_worker() （这里）
+        点击窗口关闭按钮 closeEvent → stop_worker()
+        Cmd+Q / 菜单退出 / 外部终止 aboutToQuit 信号 → stop_worker()
         """
-        app = QApplication.instance()
-        if app is not None:
-            app.aboutToQuit.connect(self.stop_worker)
+        # app = QApplication.instance()
+        # if app is not None:
+        #     app.aboutToQuit.connect(self.stop_worker)
 
     @Slot(object)
     def update_data(self, y_new):
@@ -149,19 +151,15 @@ class SineWaveDemo(QMainWindow):
         self.curve.setData(self.t_axis, self.buff)
 
     def closeEvent(self, event):
-        self.stop_worker()
-        super().closeEvent(event)
+        print("Closing window...")
+        self.stop_worker()        # 第1步：停止后台工作线程
+        super().closeEvent(event) # 第2步：调用父类的默认处理
 
     def stop_worker(self):
+        print("Stopping worker...")
         if not self.worker_thread.isRunning():
             return
-
-        self.worker.stop()
-        self.worker_thread.quit()
-        if not self.worker_thread.wait(1000):
-            self.worker.stop()
-            self.worker_thread.quit()
-            self.worker_thread.wait(1000)
+        self.worker.stop() # 打破while循环
 
 
 def main():

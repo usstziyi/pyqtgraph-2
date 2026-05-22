@@ -38,6 +38,8 @@ ptr = 0  # 数据写入位置指针
 
 def update1():
     global ptr
+    # ptr = (ptr + 1) % buffer_size 是 赋值 ，如果不加 global ，
+    # Python 会在函数内部创建一个叫 ptr 的局部变量，外层的 ptr 始终为 0，永远不会变。
     data[ptr] = np.sin(ptr * 0.1) + np.random.normal(0, 0.1)
     ptr = (ptr + 1) % buffer_size
     curve1.setData(x_data, data)
@@ -59,25 +61,33 @@ win2.resize(800, 400)
 p2 = win2.addPlot(title="环形缓冲区: 滚动更新")
 p2.setLabel('left', '数值')
 
+signal_freq = 2.0           # 源信号频率 (Hz)
+signal_amp = 1.0           # 信号幅度
+time_interval = 50          # 采样间隔 (ms)
+dt = time_interval / 1000.0  # 转为秒
+fs = 1.0 / dt               # 采样率 (Hz)
+
 history_len = 300
-x2 = np.arange(history_len)
+x_time = np.arange(history_len) * dt   # X 轴: 真实时间 (秒)
 y2 = np.zeros(history_len)
-curve2 = p2.plot(x2, y2, pen='c')
+curve2 = p2.plot(x_time, y2, pen='c')
+
+p2.setLabel('bottom', '时间', units='s')
 
 step = 0
 
-
 def update2():
     global step, y2
-    y2[:-1] = y2[1:]  # 左移
-    y2[-1] = np.sin(step * 0.1) + np.random.normal(0, 0.1)
+    t = step * dt                         # 当前采样时刻
+    y2[:-1] = y2[1:]                      # 左移
+    y2[-1] = signal_amp * np.sin(2 * np.pi * signal_freq * t)
     step += 1
-    curve2.setData(x2, y2)
+    curve2.setData(x_time, y2)
 
 
 timer2 = QtCore.QTimer()
 timer2.timeout.connect(update2)
-timer2.start(50)
+timer2.start(time_interval)
 
 
 # ---------------------------------------------------------------------------

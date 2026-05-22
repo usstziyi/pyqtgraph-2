@@ -172,7 +172,7 @@ if HAS_OPENGL:
     z3d = t / (2 * np.pi)
 
     line3d = gl.GLLinePlotItem(
-        pos=np.column_stack([x3d, y3d, z3d]),
+        pos=np.column_stack([x3d, y3d, z3d]), # 可以理解为"横向拼接" (500,)->(500,3)
         color=pg.mkColor('c'),
         width=2
     )

@@ -147,7 +147,6 @@ try:
     HAS_OPENGL = True
 except ImportError:
     pass
-
 if HAS_OPENGL:
     import pyqtgraph.opengl as gl
 
@@ -155,6 +154,7 @@ if HAS_OPENGL:
     gl_widget = gl.GLViewWidget()
     gl_widget.setWindowTitle("7. 3D 图形 (GLViewWidget)")
     gl_widget.resize(800, 600)
+    # 设置相机的初始距离，控制3D视图的缩放程度
     gl_widget.opts['distance'] = 20
 
     # 地面网格
@@ -193,11 +193,13 @@ if HAS_OPENGL:
     SZ = np.sin(np.sqrt(SX**2 + SY**2))
 
     surface = gl.GLSurfacePlotItem(
-        x=sx, y=sy, z=SZ,
-        color=pg.mkColor(0, 150, 200, 100),
-        shader='shaded'
+        x=sx,           # X轴坐标数组，定义曲面的宽度方向网格点
+        y=sy,           # Y轴坐标数组，定义曲面的高度方向网格点
+        z=SZ,           # Z轴高度值，二维数组，形状与x、y网格对应
+        color=pg.mkColor(0, 150, 200, 100),  # 曲面颜色: RGBA(青蓝色, 半透明)
+        shader='shaded' # 着色模式: 'shaded'表示使用光照阴影效果
     )
-    gl_widget.addItem(surface)
+    # gl_widget.addItem(surface)
 
     gl_widget.show()
 else:

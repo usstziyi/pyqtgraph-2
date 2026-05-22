@@ -71,7 +71,7 @@ p2.plot(x, y, pen='c')
 
 # 创建 X 轴方向的区间选择器
 lr = pg.LinearRegionItem(values=[2, 4], orientation='horizontal')
-lr.setZValue(-10)  # 放在曲线下方
+lr.setZValue(-10)  # 放在曲线下方图层
 p2.addItem(lr)
 
 # 也可以创建 Y 轴方向的
@@ -94,12 +94,12 @@ win2.resize(1000, 600)
 
 # 上图: 全览 + 区间选择器
 p_overview = win2.addPlot(title="全览 (拖拽区间选择子图数据)", row=0, col=0)
-x = np.linspace(0, 100, 5000)
-y = np.sin(x) + np.random.normal(0, 0.1, size=5000)
-p_overview.plot(x, y, pen='c')
+x_ov = np.linspace(0, 100, 5000)
+y_ov = np.sin(x_ov) + np.random.normal(0, 0.1, size=5000)
+p_overview.plot(x_ov, y_ov, pen='c')
 
 lr3 = pg.LinearRegionItem(values=[20, 40])
-lr3.setZValue(-10)
+lr3.setZValue(-10) # 放在曲线下方图层
 p_overview.addItem(lr3)
 
 # 下图: 显示选中区间的详情
@@ -110,8 +110,8 @@ detail_curve = p_detail.plot(pen='g')
 def update_detail():
     """当 LinearRegionItem 区间变化时，更新下图显示"""
     region = lr3.getRegion()  # 返回 (min, max)
-    mask = (x >= region[0]) & (x <= region[1])
-    detail_curve.setData(x[mask], y[mask])
+    mask = (x_ov >= region[0]) & (x_ov <= region[1])
+    detail_curve.setData(x_ov[mask], y_ov[mask])
 
 
 lr3.sigRegionChanged.connect(update_detail)

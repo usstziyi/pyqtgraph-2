@@ -38,22 +38,23 @@ y = np.sin(x) * 5 + 5
 p1.plot(x, y, pen='c')
 
 # 垂直线，位于 x=3, 可拖拽
-vline = pg.InfiniteLine(pos=3, angle=90, movable=True, pen='r')
+vline = pg.InfiniteLine(pos=3, angle=90, movable=True, pen='r', label='x={value:0.2f}')
 p1.addItem(vline)
 
 # 水平线，位于 y=5, 可拖拽，带标签
 hline = pg.InfiniteLine(pos=5, angle=0, movable=True,
                         pen=pg.mkPen('g', width=2, style=pg.QtCore.Qt.PenStyle.DashLine),
-                        label='y=5', labelOpts={'position': 0.9})
+                        label='y={value:0.2f}', labelOpts={'position': 0.9})
 p1.addItem(hline)
 
 # 斜线: angle=45
-dline = pg.InfiniteLine(pos=(2, 0), angle=45, movable=False,
-                        pen=pg.mkPen('y', width=1))
+dline = pg.InfiniteLine(pos=(2, 0), angle=45, movable=True,
+                        pen=pg.mkPen('y', width=1), label='{value}')
 p1.addItem(dline)
 
 # 用 PlotItem.addLine() 快捷方法
-p1.addLine(x=7, pen=pg.mkPen('m', width=1, style=pg.QtCore.Qt.PenStyle.DotLine))
+p1.addLine(x=7, pen=pg.mkPen('m', width=1, style=pg.QtCore.Qt.PenStyle.DotLine),
+                              movable=True, label='x={value:0.2f}')
 
 
 # ---------------------------------------------------------------------------

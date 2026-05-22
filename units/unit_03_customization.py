@@ -23,7 +23,15 @@ app = pg.mkQApp("Unit 3: 图表美化与定制")
 #    - foreground: 默认前景色
 #    - imageAxisOrder: 图像轴顺序 ('row-major' / 'col-major')
 # ---------------------------------------------------------------------------
-pg.setConfigOptions(antialias=True)
+# 必须在创建任何 PlotWidget / ImageView 之前调用！
+pg.setConfigOptions(
+    antialias=True,              # 抗锯齿
+    # background='w',              # 白色背景
+    # foreground='k',              # 黑色前景文字
+    imageAxisOrder='row-major',  # 行主序
+    leftButtonPan=True,          # 左键平移（适合信号浏览场景）
+    useOpenGL=False,             # 一般不需要，除非数据量巨大
+)
 
 # ---------------------------------------------------------------------------
 # 1. mkPen: 创建画笔
@@ -71,10 +79,14 @@ p_axis.showGrid(x=True, y=True, alpha=0.3)
 
 # 对数坐标
 p_log = win.addPlot(title="2b. 对数坐标", row=0, col=1)
+# np.logspace 生成等比数列（对数等间距的点）
+# x 是从 0.1 到 1000 的 100 个值，在对数轴上均匀分布
 x = np.logspace(-1, 3, 100)
 y = x ** 2
 p_log.plot(x, y)
 p_log.setLogMode(x=True, y=True)
+# 在对数坐标下，
+# y=x^2会变成一条直线，log⁡y=2logx，是对数域上的线性关系，这正是对数坐标图的典型演示用法。
 
 # ---------------------------------------------------------------------------
 # 3. 图例 (LegendItem)
@@ -82,7 +94,9 @@ p_log.setLogMode(x=True, y=True)
 #    - 绘图时需指定 name 参数
 # ---------------------------------------------------------------------------
 p_legend = win.addPlot(title="3. 图例", row=1, col=0)
-p_legend.addLegend(offset=(-10, 10))  # offset 控制相对左上角的偏移 (像素)
+p_legend.addLegend(offset=(-10, 10))  # offset 控制相对右上角的偏移 (像素)
+# x = -10：向左偏移 10 像素（负值向左，正值向右）
+# y = 10：向下偏移 10 像素（正值向下，负值向上）
 
 x = np.linspace(0, 10, 200)
 p_legend.plot(x, np.sin(x), pen=pen1, name='sin(x)')
@@ -107,17 +121,19 @@ for i, (name, style) in enumerate(styles):
     p_styles.plot([0, 10], [i, i], pen=pen)
 
 p_styles.getAxis('left').setTicks(
-    [enumerate([s[0] for s in styles])])
+    [[(i, s[0]) for i, s in enumerate(styles)]])
 p_styles.setYRange(-0.5, len(styles) - 0.5)
 
 # ---------------------------------------------------------------------------
 # 5. 阴影笔 (shadowPen): 绘制线条的底层阴影
 # ---------------------------------------------------------------------------
 p_shadow = win.addPlot(title="5. shadowPen 阴影笔", row=2, col=0)
+p_shadow.addLegend()
 x = np.linspace(0, 2 * np.pi, 200)
 p_shadow.plot(x, np.sin(x), pen='w', name='sin')
 p_shadow.plot(x, np.cos(x), pen='c', shadowPen=pg.mkPen('w', width=6),
               name='cos with shadow')
+
 
 # ---------------------------------------------------------------------------
 # 6. BarGraphItem: 柱状图
@@ -133,6 +149,7 @@ bar_graph = pg.BarGraphItem(
                         np.linspace(200, 50, 5).astype(int))
     ]
 )
+# 必须手动创建 BarGraphItem 再 addItem()
 p_bar.addItem(bar_graph)
 
 axis = p_bar.getAxis('bottom')
@@ -144,10 +161,12 @@ axis.setTicks([list(enumerate(categories))])
 p_err = win.addPlot(title="7. ErrorBarItem 误差条", row=3, col=0)
 x = np.arange(5)
 y = np.array([10, 15, 13, 17, 12])
+# 每个点上下各延伸的误差量
 errors = np.array([1.0, 0.5, 2.0, 1.5, 0.8])
 
 p_err.plot(x, y, pen=None, symbol='o', symbolSize=10, symbolBrush='y')
 
+# beam 误差条顶端横线的宽度（X 轴单位）
 err_item = pg.ErrorBarItem(x=x, y=y, height=errors,
                            beam=0.5, pen=pg.mkPen('r', width=2))
 p_err.addItem(err_item)
@@ -160,8 +179,8 @@ x = np.linspace(0, 10, 200)
 y1 = np.sin(x) + 1
 y2 = np.cos(x) + 1
 
-curve1 = p_fill.plot(x, y1, pen='b')
-curve2 = p_fill.plot(x, y2, pen='r')
+curve1 = p_fill.plot(x, y1, pen='b')  # 蓝色曲线
+curve2 = p_fill.plot(x, y2, pen='r')  # 红色曲线
 
 fill = pg.FillBetweenItem(curve1, curve2, brush=pg.mkBrush(100, 100, 255, 80))
 p_fill.addItem(fill)

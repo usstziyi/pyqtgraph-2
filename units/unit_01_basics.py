@@ -39,6 +39,13 @@ app = pg.mkQApp("Unit 1: 基础绘图")
 # 2a. 传入 Python list
 data_list = [1, 3, 2, 5, 4, 8, 6, 7]
 pw1 = pg.plot(data_list, title="2a. pg.plot(list) - 传入 Python list")
+# # 等价于：
+# pw = pg.PlotWidget(title="...")
+# pw.plot(data_list)
+# pw.show()
+# pw1 = pg.plot(data1)  # 独立窗口 1，独立 PlotWidget
+# pw2 = pg.plot(data2)  # 独立窗口 2，独立 PlotWidget
+# pw3 = pg.plot(data3)  # 独立窗口 3，独立 PlotWidget
 
 # 2b. 传入 numpy 数组
 data_np = np.array([1, 3, 2, 5, 4, 8, 6, 7])

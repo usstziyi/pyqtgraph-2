@@ -21,15 +21,19 @@ win = pg.GraphicsLayoutWidget(title="Unit 7: 信号交互", show=True)
 win.resize(1400, 900)
 
 p1 = win.addPlot(title="1. sigClicked: 点击曲线", row=0, col=0)
+p1.addLegend()
 x = np.linspace(0, 10, 200)
 curve1 = p1.plot(x, np.sin(x), pen='y', name='sin',
                  clickable=True, width=3)
 
-p1.addLegend()
-
-
 def on_curve_clicked(item, ev):
-    print(f"曲线被点击: {item.name()}")
+    # ev 是 QGraphicsSceneMouseEvent
+    scene_pos = ev.scenePos()
+    # 通过 item 所在的 ViewBox 反算到数据坐标
+    vb = item.getViewBox()
+    if vb:
+        data_pos = vb.mapSceneToView(scene_pos)
+        print(f"点击了数据坐标: ({data_pos.x():.2f}, {data_pos.y():.2f})")
 
 
 curve1.sigClicked.connect(on_curve_clicked)
@@ -66,10 +70,11 @@ y_pts2 = np.random.normal(size=10)
 
 hover_curve = p3.plot(x_pts2, y_pts2, pen=None, symbol='o', symbolSize=15,
                       symbolBrush='y')
+hover_curve.scatter.opts['hoverable'] = True
 
 
 def on_points_hovered(item, points, ev):
-    if points:
+    if len(points) > 0:
         pt = points[0]
         print(f"Hover: pos=({pt.pos().x():.1f}, {pt.pos().y():.3f})")
 
@@ -113,6 +118,12 @@ def mouse_moved(pos):
 
 # 用 Proxy 监听场景鼠标移动
 p4.scene().sigMouseMoved.connect(mouse_moved)
+# 第 1 步：p4.scene()
+# p4 是一个 PlotItem 。所有 PlotItem 都放在同一个 QGraphicsScene （场景）中。 .scene() 返回这个全局的场景对象。
+# 第 2 步：.sigMouseMoved
+# 这是 QGraphicsScene 上的一个 Qt 信号（Signal）。每当鼠标在 整个场景 内移动，它就会发射（emit），带一个参数：当前鼠标的 场景坐标 QPointF 。
+# 第 3 步：.connect(mouse_moved)
+# 把信号连接到槽函数 mouse_moved(pos) 。鼠标移动时， pos 就是场景坐标。
 
 
 # ---------------------------------------------------------------------------
@@ -134,6 +145,7 @@ p6.setLabel('bottom', '时间')
 def on_range_changed(vb, ranges):
     print(f"范围改变: X=[{ranges[0][0]:.2f}, {ranges[0][1]:.2f}], "
           f"Y=[{ranges[1][0]:.2f}, {ranges[1][1]:.2f}]")
+    p6.setXRange(*ranges[0], padding=0)
 
 
 p5.sigRangeChanged.connect(on_range_changed)
@@ -142,14 +154,14 @@ p5.sigRangeChanged.connect(on_range_changed)
 # ---------------------------------------------------------------------------
 # 6. 鼠标右键菜单禁用 / 自定义
 # ---------------------------------------------------------------------------
-p7 = win.addPlot(title="6. 禁用了右键菜单", row=3, col=0)
-p7.plot(np.linspace(0, 10, 100), np.sin(np.linspace(0, 20, 100)), pen='m')
-
-
-# 可以用 setMenuEnabled 来控制
+# 禁用右键菜单: 自定义 ViewBox 重写 raiseContextMenu
 class NoMenuViewBox(pg.ViewBox):
     def raiseContextMenu(self, ev):
         pass  # 不弹出菜单
+
+
+p7 = win.addPlot(title="6. 禁用了右键菜单", row=3, col=0, viewBox=NoMenuViewBox())
+p7.plot(np.linspace(0, 10, 100), np.sin(np.linspace(0, 20, 100)), pen='m')
 
 
 # ---------------------------------------------------------------------------

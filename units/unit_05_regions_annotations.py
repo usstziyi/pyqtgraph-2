@@ -78,6 +78,9 @@ p2.addItem(lr)
 lr_y = pg.LinearRegionItem(values=[4, 7], orientation='vertical',
                            pen=pg.mkPen('y', width=1),
                            brush=pg.mkBrush(255, 255, 0, 40))
+# 固定宽度，不让用户拖拽单条边界线(可选)
+lr_y.lines[0].setMovable(False)
+lr_y.lines[1].setMovable(False)
 p2.addItem(lr_y)
 
 

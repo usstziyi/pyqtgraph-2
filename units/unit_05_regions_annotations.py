@@ -173,7 +173,7 @@ p6.addItem(target)
 p7 = win.addPlot(title="7. 区间统计 (拖拽选择查看统计)", row=2, col=1)
 x = np.linspace(0, 50, 1000)
 y = np.sin(x * 0.3) * 5 + np.random.normal(0, 0.3, size=1000)
-curve_stat = p7.plot(x, y, pen='c')
+p7.plot(x, y, pen='c')
 
 lr_stat = pg.LinearRegionItem(values=[10, 20])
 lr_stat.setZValue(-10)

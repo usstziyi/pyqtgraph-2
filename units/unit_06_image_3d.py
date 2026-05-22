@@ -29,6 +29,10 @@ pg.image(img_data, title="1. pg.image() 快速显示")
 
 # ---------------------------------------------------------------------------
 # 2. 在 PlotItem 中使用 ImageItem (带坐标轴)
+# plot = win.addPlot()
+# image = pg.ImageItem()
+# plot.addItem(image)
+# image.setImage(img_data)
 # ---------------------------------------------------------------------------
 win = pg.GraphicsLayoutWidget(title="Unit 6: 图像与3D", show=True)
 win.resize(1400, 900)
@@ -39,7 +43,8 @@ p_img = win.addPlot(title="2. ImageItem 在 PlotItem 中", row=0, col=0)
 x = np.linspace(-5, 5, 200)
 y = np.linspace(-3, 3, 150)
 X, Y = np.meshgrid(x, y)
-Z = np.sin(np.sqrt(X**2 + Y**2)) * np.exp(-np.sqrt(X**2 + Y**2) / 3)
+# Z = np.sin(np.sqrt(X**2 + Y**2)) * np.exp(-np.sqrt(X**2 + Y**2) / 3)
+Z = X+Y
 
 img = pg.ImageItem(image=Z)
 img.setRect(pg.QtCore.QRectF(x[0], y[0], x[-1] - x[0], y[-1] - y[0]))
@@ -95,15 +100,21 @@ cm_bar = p_cm.addColorBar(img_cm, colorMap='CET-R3')
 # ---------------------------------------------------------------------------
 p_hist = win.addPlot(title="5. 带 HistogramLUT 的图像", row=1, col=0)
 
+# Gamma 分布，非均匀
 img2_data = np.random.gamma(2, 2, size=(200, 200))
 img2 = pg.ImageItem(image=img2_data)
 p_hist.addItem(img2)
 
 # 直方图色阶控件 (嵌入在窗口右侧)
+# 创建 直方图 + 色阶控件 ，并绑定到 img2 。
+# 这个控件会自动根据图像数据生成亮度直方图，
+# 并允许用户拖动滑块调整显示范围（类似 Photoshop 的色阶工具）
 hist = pg.HistogramLUTItem()
 hist.setImageItem(img2)
-# 添加到布局
+# 添加到布局ignoreBounds=True 的意思是：这个控件不参与 ViewBox 的自动范围计算
+# 否则 autoRange 会把图像区域撑大来容纳它。
 p_hist.vb.addItem(hist, ignoreBounds=True)
+
 
 
 # ---------------------------------------------------------------------------
@@ -117,6 +128,7 @@ p_mesh = win.addPlot(title="6. PColorMeshItem 伪彩色网格", row=1, col=1)
 x_edges = np.linspace(-5, 5, 51)  # 51 顶点 → 50 单元格
 y_edges = np.linspace(-3, 3, 31)  # 31 顶点 → 30 单元格
 Xv, Yv = np.meshgrid(x_edges, y_edges)  # shape (31, 51): 顶点坐标
+# shape: (30, 50)  ← 每个格子的左上角顶点坐标
 Z = np.sin(Xv[:-1, :-1]) * np.cos(Yv[:-1, :-1])  # shape (30, 50): 单元格颜色
 
 mesh = pg.PColorMeshItem(Xv, Yv, Z, colorMap=pg.colormap.get('plasma'))

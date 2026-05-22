@@ -168,6 +168,8 @@ def add_new_curve():
 
 btn.clicked.connect(add_new_curve)
 
+# win ~ win5b pg.GraphicsLayoutWidget(...) 构造函数中传了 show=True 
+# win6 QtWidgets.QMainWindow() 必须手动调用 .show()
 win6.show()
 
 pg.exec()

@@ -119,10 +119,12 @@ class CapstoneApp:
         self.main_win.setCentralWidget(area)
 
         # ---- Dock 1: 波形显示 (4通道) ----
-        self.wave_dock = Dock(
-            "实时波形 (4通道)", size=(900, 500))
+        self.wave_dock = Dock("实时波形 (4通道)", size=(900, 500))
 
         self.wave_widget = pg.GraphicsLayoutWidget()
+        # ci:GraphicsLayoutWidget 内部的 GraphicsLayout 对象
+        # （本质是 QGraphicsGridLayout ），负责管理网格布局
+        # 将网格内各单元格之间的间距设为 0 像素
         self.wave_widget.ci.layout.setSpacing(0)
 
         self.wave_plots = []
@@ -136,8 +138,8 @@ class CapstoneApp:
             row = ch // 2
             col = ch % 2
 
-            p = self.wave_widget.addPlot(
-                title=f"通道 {ch + 1}", row=row, col=col)
+            # 生成plot
+            p = self.wave_widget.addPlot(title=f"通道 {ch + 1}", row=row, col=col)
             p.setLabel('left', 'V')
             p.setYRange(-3, 3)
 
@@ -145,22 +147,22 @@ class CapstoneApp:
             if row == 0:
                 p.hideAxis('bottom')
 
+            # 生成curve
             curve = p.plot(
                 self.x_axis,
                 np.zeros(self.buffer_size),
                 pen=pg.mkPen(channel_colors[ch], width=1)
             )
 
-            # 阈值线
+            # 生成阈值线
             thr_line = pg.InfiniteLine(
                 pos=0, angle=0, movable=False,
-                pen=pg.mkPen('r',
-                             style=pg.QtCore.Qt.PenStyle.DashLine))
+                pen=pg.mkPen('r', style=pg.QtCore.Qt.PenStyle.DashLine))
             p.addItem(thr_line)
 
-            self.wave_plots.append(p)
-            self.wave_curves.append(curve)
-            self.threshold_lines.append(thr_line)
+            self.wave_plots.append(p)          # plot
+            self.wave_curves.append(curve)     # line
+            self.threshold_lines.append(thr_line) # thr_line
 
         self.wave_dock.addWidget(self.wave_widget)
 
@@ -172,18 +174,19 @@ class CapstoneApp:
         self.fft_plots = []
         self.fft_curves = []
 
-        freq_axis = np.fft.rfftfreq(
-            self.buffer_size, d=1.0 / self.sample_rate)
+        # d:采样点之间的时间间隔
+        freq_axis = np.fft.rfftfreq(self.buffer_size, d=1.0 / self.sample_rate)
 
         for ch in range(self.num_channels):
-            p = self.fft_widget.addPlot(
-                title=f"Ch{ch + 1} FFT", row=ch, col=0)
+            # 生成plot
+            p = self.fft_widget.addPlot(title=f"Ch{ch + 1} FFT", row=ch, col=0)
             p.setLabel('left', '|X|')
             p.setLogMode(x=False, y=True)
 
             if ch < self.num_channels - 1:
                 p.hideAxis('bottom')
 
+            # 生成curve
             curve = p.plot(freq_axis, np.zeros(len(freq_axis)),
                            pen=pg.mkPen(channel_colors[ch], width=1))
             p.setXRange(0, self.sample_rate / 2)
@@ -216,6 +219,7 @@ class CapstoneApp:
         # 通道选择
         ch_label = QtWidgets.QLabel("选择通道:")
         ctrl_layout.addWidget(ch_label)
+        
         self.ch_selector = QtWidgets.QComboBox()
         self.ch_selector.addItems([f"通道 {i + 1}" for i in range(
             self.num_channels)])
@@ -317,6 +321,8 @@ class CapstoneApp:
         if self.btn_pause.isChecked():
             return
 
+        # 从信号生成器获取最新的采样数据（环形缓冲区）
+        # 返回包含所有通道当前缓冲区的列表，每个通道是一个长度为 buffer_size 的数组
         buffers = self.generator.update()
 
         # 更新波形显示
@@ -329,11 +335,8 @@ class CapstoneApp:
                 window = np.hanning(self.buffer_size)
                 signal = buffers[ch] * window
                 fft = np.abs(np.fft.rfft(signal))
-                self.fft_curves[ch].setData(
-                    np.fft.rfftfreq(self.buffer_size,
-                                    d=1.0 / self.sample_rate),
-                    fft
-                )
+                freq = np.fft.rfftfreq(self.buffer_size,d=1.0/self.sample_rete)
+                self.fft_curves[ch].setData(freq, fft)
 
         # 更新统计 (每 10 帧)
         if self.generator.step % 10 == 0:
@@ -343,6 +346,12 @@ class CapstoneApp:
                 std_val = data.std()
                 pk_pk = data.max() - data.min()
 
+                # 计算过零点数：先将数据减去均值（去除直流分量），
+                # 使用 signbit 判断正负，然后通过 diff 检测符号变化，
+                # 最后求和得到过零点总数，过零点数常用于 估算信号频率
+                # 用于统计信号穿过均值线的次数
+                # 返回一个布尔数组，负数对应 True ，正数对应 False 。相当于把信号压缩成"正负标签"。
+                # 当符号从正变负（False→True）或从负变正（True→False）时，差值为 True ；符号不变时差值为 False 。
                 zero_crossings = np.sum(
                     np.diff(np.signbit(data - np.mean(data))))
 
@@ -361,16 +370,13 @@ class CapstoneApp:
             self.main_win, "保存数据", "", "CSV (*.csv);;NumPy (*.npy)")
 
         if fname[0]:
-            data = np.column_stack([
-                np.arange(self.buffer_size)
-            ] + self.generator.buffers)
-            if fname[0].endswith('.npy'):
+            data = np.column_stack([np.arange(self.buffer_size)] + self.generator.buffers)
+            if fname[0].endswith('.npy'): # 使用 NumPy 二进制格式保存
                 np.save(fname[0], data)
-            else:
-                header = 'sample,' + ','.join(
-                    [f'ch{i + 1}' for i in range(self.num_channels)])
-                np.savetxt(fname[0], data, delimiter=',',
-                           header=header, comments='')
+            else: # CSV 格式保存
+                header = 'sample,' + ','.join([f'ch{i + 1}' for i in range(self.num_channels)])
+                # comments='' ：去掉 NumPy 默认的 # 注释符，确保表头干净。
+                np.savetxt(fname[0], data, delimiter=',',header=header, comments='')
 
     def run(self):
         pg.exec()

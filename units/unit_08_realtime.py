@@ -250,8 +250,8 @@ p6.setLabel('left', 'FPS')
 p6.setLabel('bottom', '时间 (s)')
 p6.setYRange(0, 80)
 
-fps_history = np.zeros(200)
-fps_x = np.arange(200)
+fps_history = np.zeros(200) # Y
+fps_x = np.arange(200)      # X
 fps_curve = p6.plot(fps_x, fps_history, pen='g')
 
 last_time = QtCore.QElapsedTimer()

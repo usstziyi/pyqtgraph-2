@@ -27,8 +27,8 @@ p1.setLabel('bottom', '样本点')
 
 # 预分配数据缓冲区
 buffer_size = 500
-data = np.zeros(buffer_size)
-x_data = np.arange(buffer_size)
+data = np.zeros(buffer_size)    # y
+x_data = np.arange(buffer_size) # x
 
 # 创建曲线
 curve1 = p1.plot(x_data, data, pen='y')
@@ -61,15 +61,24 @@ win2.resize(800, 400)
 p2 = win2.addPlot(title="环形缓冲区: 滚动更新")
 p2.setLabel('left', '数值')
 
-signal_freq = 2.0           # 源信号频率 (Hz)
+# 原始连续信号
+signal_freq = 1.0           # 源信号频率 (Hz)
 signal_amp = 1.0           # 信号幅度
-time_interval = 50          # 采样间隔 (ms)
-dt = time_interval / 1000.0  # 转为秒
-fs = 1.0 / dt               # 采样率 (Hz)
 
-history_len = 300
-x_time = np.arange(history_len) * dt   # X 轴: 真实时间 (秒)
-y2 = np.zeros(history_len)
+# 离散采样，抓拍
+time_interval = 100          # 采样间隔 (ms)采1个点
+dt = time_interval / 1000.0  # 转为秒，采1个点需要多少秒
+fs = 1.0 / dt               # 采样率 (Hz)，1秒可以采多少个点，要求fs*2>signal_freq
+# 这里是由 采样间隔->采样率
+# 也可以是 采样率->采样间隔
+
+# 缓存
+history_len = 200
+history_time = history_len * dt        # 装满缓存需要总时间 (秒)=x轴 range
+
+# 绘图
+x_time = np.arange(history_len) * dt   # X 轴: 队列时间 (秒)=x轴 range，不是真实时间
+y2 = np.zeros(history_len)             # Y 轴：0
 curve2 = p2.plot(x_time, y2, pen='c')
 
 p2.setLabel('bottom', '时间', units='s')
@@ -78,11 +87,11 @@ step = 0
 
 def update2():
     global step, y2
-    t = step * dt                         # 当前采样时刻
+    t = step * dt                         # 快门真实时间
     y2[:-1] = y2[1:]                      # 左移
-    y2[-1] = signal_amp * np.sin(2 * np.pi * signal_freq * t)
+    y2[-1] = signal_amp * np.sin(2 * np.pi * signal_freq * t) # 用真实时间生成信号
     step += 1
-    curve2.setData(x_time, y2)
+    curve2.setData(x_time, y2)            # 用队列时间做X轴
 
 
 timer2 = QtCore.QTimer()

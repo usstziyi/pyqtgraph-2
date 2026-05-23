@@ -15,6 +15,7 @@ from pyqtgraph.dockarea.DockArea import DockArea
 from pyqtgraph.dockarea.Dock import Dock
 
 app = pg.mkQApp("Unit 9: 自定义控件与 Dock 系统")
+app.setStyle("Fusion") # Aqua
 
 
 # ---------------------------------------------------------------------------
@@ -53,8 +54,7 @@ class ParamDemo:
             ]},
             {'name': '显示', 'type': 'group', 'children': [
                 {'name': '线条颜色', 'type': 'color', 'value': '#00FFFF'},
-                {'name': '线宽', 'type': 'int', 'value': 1,
-                 'limits': (1, 5)},
+                {'name': '线宽', 'type': 'int', 'value': 1, 'limits': (1, 5)},
                 {'name': '显示散点', 'type': 'bool', 'value': False},
             ]},
         ]
@@ -62,7 +62,7 @@ class ParamDemo:
         self.tree = pg.parametertree.ParameterTree()
         self.param = pg.parametertree.Parameter.create(
             name='参数', type='group', children=params)
-        self.tree.setParameters(self.param, showTop=False)
+        self.tree.setParameters(self.param, showTop=True)
 
         # 用 QSplitter 组合参数面板和绘图区
         splitter = QtWidgets.QSplitter()
@@ -110,6 +110,7 @@ class ParamDemo:
             y += np.random.normal(0, noise_amp, size=len(y))
 
         if show_scatter:
+            # 既画线又画点
             self.curve = self.plot.plot(
                 self.x, y, pen=pg.mkPen(color, width=width),
                 symbol='o', symbolSize=4,
@@ -130,15 +131,19 @@ def demo_dock_system():
     area = DockArea()
 
     # 创建 Dock
-    d1 = Dock("信号监视器", size=(400, 300))
-    d2 = Dock("频谱分析", size=(400, 300))
-    d3 = Dock("统计信息", size=(400, 200))
-    d4 = Dock("参数控制", size=(300, 400))
+    d1 = Dock("信号监视器", size=(400, 300), autoOrientation=False)
+    d2 = Dock("频谱分析", size=(400, 300), autoOrientation=False)
+    d3 = Dock("统计信息", size=(400, 200), autoOrientation=False)
+    d4 = Dock("参数控制", size=(300, 400), autoOrientation=False)
 
-    area.addDock(d1, 'left')
-    area.addDock(d2, 'right')
-    area.addDock(d3, 'bottom', d1)
-    area.addDock(d4, 'bottom', d2)
+    for d in (d1, d2, d3, d4):
+        d.label.setOrientation('horizontal')
+        d.label.hide()
+
+    area.addDock(d4, 'left')          # 参数控制：先放到最左边
+    area.addDock(d1, 'right', d4)     # 信号监视器：放到参数控制右边
+    area.addDock(d2, 'bottom', d1)    # 频谱分析：放到信号监视器下面
+    area.addDock(d3, 'right', d2)     # 统计信息：放到频谱分析右边
 
     # 在 Dock 中添加内容
     pw1 = pg.PlotWidget(title="信号")
@@ -181,6 +186,139 @@ def demo_dock_system():
     win.show()
     return win
 
+def demo_splitter_system():
+    import numpy as np
+    import pyqtgraph as pg
+    from pyqtgraph.parametertree import Parameter, ParameterTree
+    from PySide6 import QtCore, QtWidgets
+
+    # =========================
+    # 1. 创建主窗口
+    # =========================
+    win = QtWidgets.QMainWindow()
+    win.setWindowTitle("2. QSplitter 系统演示")
+    win.resize(1200, 800)
+
+    # =========================
+    # 2. 创建三个 Splitter
+    # =========================
+    # 最外层：左右分割
+    main_splitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal)
+
+    # 右侧：上下分割
+    right_splitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Vertical)
+
+    # 右下：左右分割
+    bottom_splitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal)
+
+    # =========================
+    # 3. 左侧参数面板
+    # =========================
+    params = [
+        {'name': '阈值', 'type': 'float', 'value': 0.5},
+        {'name': '窗口大小', 'type': 'int', 'value': 10},
+        {'name': '启用滤波', 'type': 'bool', 'value': False},
+    ]
+
+    param_obj = Parameter.create(
+        name='设置',
+        type='group',
+        children=params
+    )
+
+    tree = ParameterTree()
+    tree.setParameters(param_obj, showTop=False)
+
+    # 控制左侧参数栏不要太窄，也不要太宽
+    tree.setMinimumWidth(220)
+    tree.setMaximumWidth(360)
+
+    # =========================
+    # 4. 上方信号图
+    # =========================
+    pw1 = pg.PlotWidget(title="信号")
+
+    x = np.linspace(0, 10, 500)
+    signal = np.sin(x) * np.exp(-x / 5) + np.random.normal(0, 0.05, size=500)
+
+    pw1.plot(x, signal, pen='c')
+
+    # =========================
+    # 5. 左下 FFT 频谱图
+    # =========================
+    pw2 = pg.PlotWidget(title="FFT 频谱")
+
+    freq = np.fft.rfftfreq(len(signal), d=(10.0 / 500))
+    fft = np.abs(np.fft.rfft(signal))
+
+    pw2.plot(freq, fft, pen='m')
+    pw2.setLogMode(x=False, y=True)
+
+    # =========================
+    # 6. 右下统计图
+    # =========================
+    pw3 = pg.PlotWidget(title="统计")
+
+    hist_data = np.random.normal(0, 1, 1000)
+    hist, bins = np.histogram(hist_data, bins=30)
+
+    bar = pg.BarGraphItem(
+        x=bins[:-1],
+        height=hist,
+        width=bins[1] - bins[0],
+        brush='y'
+    )
+
+    pw3.addItem(bar)
+
+    # =========================
+    # 7. 组合布局
+    # =========================
+    # 底部左右：频谱 + 统计
+    bottom_splitter.addWidget(pw2)
+    bottom_splitter.addWidget(pw3)
+
+    # 右侧上下：信号 + 底部区域
+    right_splitter.addWidget(pw1)
+    right_splitter.addWidget(bottom_splitter)
+
+    # 整体左右：参数面板 + 右侧区域
+    main_splitter.addWidget(tree)
+    main_splitter.addWidget(right_splitter)
+
+    # =========================
+    # 8. 设置初始比例
+    # =========================
+    # 左侧参数栏 : 右侧主区域
+    main_splitter.setSizes([260, 940])
+
+    # 上方信号图 : 下方频谱/统计区域
+    right_splitter.setSizes([560, 240])
+
+    # 左下频谱 : 右下统计
+    bottom_splitter.setSizes([660, 340])
+
+    # =========================
+    # 9. 设置 splitter 行为
+    # =========================
+    # False 表示拖动分割线时，不实时重绘，松手后再调整
+    # True 表示拖动时实时调整
+    main_splitter.setOpaqueResize(True)
+    right_splitter.setOpaqueResize(True)
+    bottom_splitter.setOpaqueResize(True)
+
+    # 防止某个区域被压缩到完全不可见
+    main_splitter.setChildrenCollapsible(False)
+    right_splitter.setChildrenCollapsible(False)
+    bottom_splitter.setChildrenCollapsible(False)
+
+    # =========================
+    # 10. 设置中心控件
+    # =========================
+    win.setCentralWidget(main_splitter)
+    win.show()
+
+    return win
 
 # ---------------------------------------------------------------------------
 # 3. 综合: 自定义应用程序框架
@@ -249,8 +387,9 @@ def demo_custom_app():
 # ---------------------------------------------------------------------------
 # 运行所有演示
 # ---------------------------------------------------------------------------
-demo1 = ParamDemo()
-demo2 = demo_dock_system()
-demo3 = demo_custom_app()
+# demo1 = ParamDemo()
+# demo2 = demo_dock_system()
+# demo3 = demo_splitter_system()
+demo4 = demo_custom_app()
 
 pg.exec()

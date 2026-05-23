@@ -117,6 +117,12 @@ y3 = np.zeros(total_size)
 # 使用 setDownsampling 设置自动降采样 (避免直接传 autoDownsample/clipToView 在某些版本的兼容问题)
 curve3 = p3.plot(x3, y3, pen='y')
 p3.setDownsampling(auto=True, mode='peak')
+# 降采样模式为 "峰值检测" 。
+# 在一个降采样区间内保留 最大值和最小值 ，
+# 这样既能减少点数，又能保持波形的峰值特征（不会因为降采样丢失信号尖峰）。
+# 在实时绘图中， update3() 函数每 100ms 会更新 50 个数据点，数据总量是 5000 个点。
+# 如果不做降采样，5000 个点都要传给 GPU 绘制，而屏幕可能只有 ~1000 像素宽，多余的 4000 个点纯属浪费。 
+# 开启 setDownsampling(auto=True, mode='peak') 后，pyqtgraph 会自动只绘制屏幕上实际可见的点数，大幅提升性能。
 
 idx = 0
 
@@ -128,6 +134,8 @@ def update3():
     y3[idx:idx + chunk] = np.sin(np.arange(chunk) * 0.1 + idx * 0.01)
     y3[idx:idx + chunk] += np.random.normal(0, 0.05, size=chunk)
 
+    # total_size - chunk = 5000 - 50 = 4950 ，所以 idx 最大为 4900 ，写入区间最大为 [4900:4950] 。 
+    # 最末尾的 50 个点（索引 4950~4999）永远不会被新数据覆盖 ——这是为了避免最后一次写入时跨越数组末尾。
     idx = (idx + chunk) % (total_size - chunk)
     if idx == 0:
         y3[:] = 0  # 回绕时清空
@@ -165,9 +173,9 @@ for ch in range(num_channels):
     color = pg.mkColor(ch * 60, 200 - ch * 40, 150)
     curve = p.plot(x4, y4, pen=color)
 
-    channels.append(y4)
-    curves.append(curve)
-    plots.append(p)
+    channels.append(y4) # y
+    curves.append(curve) # line
+    plots.append(p) # plot
 
 step4 = 0
 
@@ -202,22 +210,26 @@ p5.setLabel('left', '频率')
 
 # 累积分布数据
 data_buf = np.random.normal(0, 1, size=2000)
-hist_data = np.zeros(50)
+hist = np.zeros(50)
 x_bins = np.linspace(-4, 4, 51)
 
 # 使用 BarGraphItem 绘制直方图
-bar = pg.BarGraphItem(x=x_bins[:-1], height=hist_data,
-                      width=0.15, brush='c')
+bar = pg.BarGraphItem(
+    x=x_bins[:-1],        # X轴位置: 每个柱子的左边缘坐标(使用分箱边界,去掉最后一个边界)
+    height=hist,     # 柱子高度: 对应每个分箱的频数/计数
+    width=0.10,           # 柱子宽度: 控制柱子的粗细程度
+    brush='c'             # 填充颜色: 'c'表示青色(cyan)
+)
 p5.addItem(bar)
-
 
 def update5():
     global data_buf
     # 添加新数据并回绕
     data_buf[:-10] = data_buf[10:]
     data_buf[-10:] = np.random.normal(0, 1, 10)
-
-    hist, _ = np.histogram(data_buf, bins=50, range=(-4, 4))
+    # 重新统计直方图
+    hist, bin_edges = np.histogram(data_buf, bins=50, range=(-4, 4))
+    # 更新柱子高度
     bar.setOpts(height=hist)
 
 
